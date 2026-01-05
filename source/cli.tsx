@@ -1,8 +1,16 @@
 #!/usr/bin/env node
 import 'dotenv/config';
+import cfonts from 'cfonts';
 import {render} from 'ink';
 import meow from 'meow';
 import App from './app.js';
+
+cfonts.say('Gittles', {
+	font: 'block',
+	colors: ['cyan', 'yellow'],
+	letterSpacing: 0,
+	space: false,
+});
 
 const cli = meow(
 	`
