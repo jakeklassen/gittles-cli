@@ -14,7 +14,8 @@
 		"test": "prettier --check . && vitest run"
 	},
 	"files": [
-		"dist"
+		"dist",
+		"drizzle"
 	],
 	"dependencies": {
 		"@libsql/client": "^0.15.15",
@@ -23,7 +24,6 @@
 		"cfonts": "^3.3.1",
 		"conf": "^15.0.2",
 		"date-fns": "^4.1.0",
-		"dotenv": "^17.2.3",
 		"drizzle-orm": "^0.45.1",
 		"ink": "^6.6.0",
 		"ink-spinner": "^5.0.0",
