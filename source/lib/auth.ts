@@ -1,7 +1,8 @@
-import 'dotenv/config';
 import {createOAuthDeviceAuth} from '@octokit/auth-oauth-device';
 import {Octokit} from '@octokit/rest';
 import {getAccessToken, setAccessToken, setUsername} from './config.js';
+
+const GITHUB_CLIENT_ID = 'Ov23ligv9nNkVGihgxUF';
 
 type DeviceVerification = {
 	device_code: string;
@@ -16,11 +17,7 @@ export type OnVerificationCallback = (verification: DeviceVerification) => void;
 export async function authenticate(
 	onVerification: OnVerificationCallback,
 ): Promise<Octokit> {
-	const clientId = process.env['GITHUB_CLIENT_ID'];
-
-	if (!clientId) {
-		throw new Error('GITHUB_CLIENT_ID environment variable is not set');
-	}
+	const clientId = process.env['GITHUB_CLIENT_ID'] ?? GITHUB_CLIENT_ID;
 
 	const auth = createOAuthDeviceAuth({
 		clientType: 'oauth-app',

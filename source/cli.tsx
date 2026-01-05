@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import 'dotenv/config';
 import cfonts from 'cfonts';
 import {render} from 'ink';
 import meow from 'meow';
