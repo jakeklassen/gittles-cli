@@ -31,10 +31,21 @@ export default function RepoBrowser({octokit}: RepoBrowserProps) {
 		new Set(),
 	);
 	const [isCommitting, setIsCommitting] = useState(false);
+	const [isSearching, setIsSearching] = useState(false);
+	const [searchQuery, setSearchQuery] = useState('');
+
+	const filteredStars = searchQuery
+		? stars.filter(
+				s =>
+					s.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+					s.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+					s.language?.toLowerCase().includes(searchQuery.toLowerCase()),
+			)
+		: stars;
 
 	const visibleCount = 10;
 	const startIndex = Math.max(0, selectedIndex - Math.floor(visibleCount / 2));
-	const visibleStars = stars.slice(startIndex, startIndex + visibleCount);
+	const visibleStars = filteredStars.slice(startIndex, startIndex + visibleCount);
 
 	useEffect(() => {
 		db.select({
@@ -59,16 +70,50 @@ export default function RepoBrowser({octokit}: RepoBrowserProps) {
 	useInput((input, key) => {
 		if (isCommitting) return;
 
+		// Search mode input handling
+		if (isSearching) {
+			if (key.escape) {
+				setIsSearching(false);
+				return;
+			}
+
+			if (key.backspace || key.delete) {
+				setSearchQuery(prev => prev.slice(0, -1));
+				setSelectedIndex(0);
+				return;
+			}
+
+			if (key.upArrow || key.downArrow || input === 'j' || input === 'k') {
+				setIsSearching(false);
+				// Fall through to navigation handling
+			} else if (input && !key.return) {
+				setSearchQuery(prev => prev + input);
+				setSelectedIndex(0);
+				return;
+			}
+		}
+
 		if (input === 'q') {
 			exit();
 		}
 
-		if (input === 'o' && stars[selectedIndex]) {
-			void open(stars[selectedIndex].url);
+		if (input === 's' && !isSearching) {
+			setIsSearching(true);
+			return;
 		}
 
-		if (input === 'd' && stars[selectedIndex]) {
-			const id = stars[selectedIndex].id;
+		if (input === 'x') {
+			setSearchQuery('');
+			setSelectedIndex(0);
+			return;
+		}
+
+		if (input === 'o' && filteredStars[selectedIndex]) {
+			void open(filteredStars[selectedIndex].url);
+		}
+
+		if (input === 'd' && filteredStars[selectedIndex]) {
+			const id = filteredStars[selectedIndex].id;
 			setMarkedForUnstar(prev => {
 				const next = new Set(prev);
 				if (next.has(id)) {
@@ -109,7 +154,7 @@ export default function RepoBrowser({octokit}: RepoBrowserProps) {
 		}
 
 		if (key.downArrow || input === 'j') {
-			setSelectedIndex(prev => Math.min(stars.length - 1, prev + 1));
+			setSelectedIndex(prev => Math.min(filteredStars.length - 1, prev + 1));
 		}
 	});
 
@@ -149,8 +194,18 @@ export default function RepoBrowser({octokit}: RepoBrowserProps) {
 			<Box marginBottom={1}>
 				<Text dimColor>
 					{stars.length} starred repos • last synced: {formatLastSynced()} •
-					↑↓/jk navigate • o open • d unstar • q quit
+					↑↓/jk navigate • s search • o open • d unstar • q quit
 				</Text>
+			</Box>
+
+			<Box marginBottom={1}>
+				<Text>{isSearching ? '/' : 'Search:'} </Text>
+				<Text color={isSearching ? 'cyan' : undefined}>
+					{searchQuery || (isSearching ? '' : '(press s)')}
+				</Text>
+				{searchQuery && (
+					<Text dimColor> ({filteredStars.length} results, x to clear)</Text>
+				)}
 			</Box>
 
 			{markedStars.length > 0 && (
@@ -206,7 +261,7 @@ export default function RepoBrowser({octokit}: RepoBrowserProps) {
 			})}
 			<Box marginTop={1}>
 				<Text dimColor>
-					{selectedIndex + 1}/{stars.length}
+					{selectedIndex + 1}/{filteredStars.length}
 				</Text>
 			</Box>
 		</Box>
