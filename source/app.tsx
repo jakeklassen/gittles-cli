@@ -1,5 +1,5 @@
-import {Text} from 'ink';
-import {useState, useCallback} from 'react';
+import {Text, useApp} from 'ink';
+import {useState, useCallback, useEffect} from 'react';
 import {isAuthenticated} from './lib/config.js';
 import {getAuthenticatedOctokit} from './lib/auth.js';
 import AuthFlow from './components/auth-flow.js';
@@ -13,6 +13,7 @@ type AppProps = {
 };
 
 export default function App({command, limit}: AppProps) {
+	const {exit} = useApp();
 	const [authenticated, setAuthenticated] = useState(isAuthenticated());
 	const [syncComplete, setSyncComplete] = useState(false);
 	const [syncResult, setSyncResult] = useState<SyncProgress | null>(null);
@@ -25,6 +26,16 @@ export default function App({command, limit}: AppProps) {
 		setSyncResult(result);
 		setSyncComplete(true);
 	}, []);
+
+	// Exit after sync completes to restore cursor
+	useEffect(() => {
+		if (!syncComplete) {
+			return;
+		}
+
+		const timer = setTimeout(() => exit(), 100);
+		return () => clearTimeout(timer);
+	}, [syncComplete, exit]);
 
 	if (!authenticated) {
 		return <AuthFlow onAuthenticated={handleAuthenticated} />;
