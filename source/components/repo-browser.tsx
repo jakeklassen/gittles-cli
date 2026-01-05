@@ -51,6 +51,7 @@ export default function RepoBrowser({octokit}: RepoBrowserProps) {
 			.orderBy(desc(starsTable.starredAt))
 			.then(result => {
 				setStars(result);
+				setSelectedIndex(0);
 				setLoading(false);
 			});
 	}, []);
