@@ -164,10 +164,13 @@ export default function RepoBrowser({octokit}: RepoBrowserProps) {
 
 	if (stars.length === 0) {
 		return (
-			<Text>
-				No stars found. Run <Text color="cyan">gittles sync</Text> to fetch your
-				starred repos.
-			</Text>
+			<Box flexDirection="column">
+				<Text>
+					No stars found. Run <Text color="cyan">gittles sync</Text> to fetch
+					your starred repos.
+				</Text>
+				<Text dimColor>Press q to quit</Text>
+			</Box>
 		);
 	}
 
