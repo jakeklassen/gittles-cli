@@ -30,13 +30,13 @@
 		"meow": "^14.0.0",
 		"octokit": "^5.0.5",
 		"open": "^11.0.0",
-		"react": "^19.2.3"
+		"react": "^19.2.4"
 	},
 	"devDependencies": {
 		"@sindresorhus/tsconfig": "^8.1.0",
 		"@types/conf": "^3.0.3",
-		"@types/node": "^25.0.8",
-		"@types/react": "^19.2.8",
+		"@types/node": "^25.0.10",
+		"@types/react": "^19.2.9",
 		"@vdemedes/prettier-config": "^2.0.1",
 		"chalk": "^5.2.0",
 		"drizzle-kit": "^0.31.8",
@@ -44,13 +44,13 @@
 		"eslint-plugin-react": "^7.32.2",
 		"eslint-plugin-react-hooks": "^7.0.1",
 		"ink-testing-library": "^4.0.0",
-		"oxlint": "^1.39.0",
-		"oxlint-tsgolint": "^0.11.0",
-		"prettier": "^3.8.0",
+		"oxlint": "^1.42.0",
+		"oxlint-tsgolint": "^0.11.2",
+		"prettier": "^3.8.1",
 		"ts-node": "^10.9.1",
 		"tsx": "^4.21.0",
 		"typescript": "^5.0.3",
-		"vitest": "^4.0.17"
+		"vitest": "^4.0.18"
 	},
 	"prettier": "@vdemedes/prettier-config"
 }
