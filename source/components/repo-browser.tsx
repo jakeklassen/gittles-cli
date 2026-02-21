@@ -83,7 +83,7 @@ export default function RepoBrowser({octokit}: RepoBrowserProps) {
 				return;
 			}
 
-			if (key.upArrow || key.downArrow || input === 'j' || input === 'k') {
+			if (key.upArrow || key.downArrow) {
 				setIsSearching(false);
 				// Fall through to navigation handling
 			} else if (input && !key.return) {
@@ -196,18 +196,22 @@ export default function RepoBrowser({octokit}: RepoBrowserProps) {
 			<Box marginBottom={1}>
 				<Text dimColor>
 					{stars.length} starred repos • last synced: {formatLastSynced()} •
-					↑↓/jk navigate • s search • o open • d unstar • q quit
+					{isSearching
+						? '↑↓ navigate • esc cancel'
+						: '↑↓/jk navigate • s search • o open • d unstar • q quit'}
 				</Text>
 			</Box>
 
 			<Box marginBottom={1}>
-				<Text>{isSearching ? '/' : 'Search:'} </Text>
-				<Text color={isSearching ? 'cyan' : undefined}>
-					{searchQuery || (isSearching ? '' : '(press s)')}
+				<Text>
+					{isSearching ? '/' : 'Search:'}{' '}
+					<Text color={isSearching ? 'cyan' : undefined}>
+						{searchQuery || (isSearching ? '' : '(press s)')}
+					</Text>
+					{searchQuery && (
+						<Text dimColor> ({filteredStars.length} results{!isSearching && ', x to clear'})</Text>
+					)}
 				</Text>
-				{searchQuery && (
-					<Text dimColor> ({filteredStars.length} results, x to clear)</Text>
-				)}
 			</Box>
 
 			{markedStars.length > 0 && (
