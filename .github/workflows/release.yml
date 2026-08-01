@@ -106,7 +106,10 @@ jobs:
           sha256sum gittles-* > checksums.txt
           cat checksums.txt
 
+      # Sigstore attestations are not available to user-owned private repos. This
+      # starts working by itself if the repo is made public.
       - name: Attest build provenance
+        if: ${{ github.event.repository.private != true }}
         uses: actions/attest-build-provenance@v4
         with:
           subject-path: dist/gittles-*

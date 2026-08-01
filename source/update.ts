@@ -245,17 +245,21 @@ function sha256(payload: Buffer): string {
  * sigstore build-provenance attestation, which proves the asset was built by the
  * repo's workflow rather than uploaded by whoever held a token.
  *
- * Returns 'verified', 'unavailable' (no gh installed), or throws when gh is present
- * and says no. A check that silently degrades to a warning is not a check.
+ * Opt-in, because attestations do not exist for every release: GitHub does not offer
+ * them to user-owned private repos, and enforcing by default would refuse every
+ * update rather than verify anything. Matches install.sh. When it is on and gh says
+ * no, this throws — a check that degrades to a warning is not a check.
+ *
+ * Returns 'verified', 'unavailable' (not requested), or throws.
  */
 function verifyAttestation(file: string): string {
+	if (process.env['GITTLES_VERIFY_ATTESTATION'] !== '1') {
+		return 'unavailable';
+	}
+
 	const available = spawnSync('gh', ['--version'], {stdio: 'ignore'});
 	if (available.status !== 0) {
-		if (process.env['GITTLES_REQUIRE_ATTESTATION'] === '1') {
-			throw new Error('attestation required but the gh CLI is not installed');
-		}
-
-		return 'unavailable';
+		throw new Error('GITTLES_VERIFY_ATTESTATION=1 but the gh CLI is not installed');
 	}
 
 	const result = spawnSync('gh', ['attestation', 'verify', file, '--repo', repo()], {
@@ -419,7 +423,5 @@ export async function installUpdate(
 		throw error;
 	}
 
-	return provenance === 'verified'
-		? release.version
-		: `${release.version} (checksum only — install gh to verify provenance)`;
+	return provenance === 'verified' ? release.version : `${release.version} (checksum verified)`;
 }
