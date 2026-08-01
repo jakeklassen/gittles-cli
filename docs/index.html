@@ -162,34 +162,27 @@
 		
 			/* ── hero banner ─────────────────────────────────────────────────────── */
 		
-			/* The wordmark is drawn as a grid of cells, not typed as text. The block and
-			   box-drawing characters in the CLI's banner come from different fallback fonts
-			   in a browser, and their advance widths disagree — which tears the two layers
-			   apart. Cells cannot drift. */
+			/* The CLI's cfonts banner, cell for cell, as geometry rather than glyphs: its
+			   block and box-drawing characters resolve to different fallback fonts in a
+			   browser and their advance widths disagree, which tears the two layers apart.
+			   Rects cannot drift, and they stay crisp at any size. */
 			.banner-wrap {
-				overflow-x: auto;
-				padding: 6px 0 2px;
-				scrollbar-width: thin;
+				margin: 0;
+				padding: 2px 0;
 			}
 		
 			.banner {
-				--cell: clamp(3px, 1.05vw, 7px);
-				display: grid;
-				grid-auto-rows: var(--cell);
-				gap: 0;
-				width: max-content;
-				filter: drop-shadow(calc(var(--cell) * 0.9) calc(var(--cell) * 0.9) 0 var(--gold));
+				display: block;
+				width: min(100%, 560px);
+				height: auto;
 			}
 		
-			.banner-row {
-				display: grid;
-				grid-auto-flow: column;
-				grid-auto-columns: var(--cell);
-				height: var(--cell);
+			.banner-outline {
+				fill: var(--gold);
 			}
 		
-			.banner-on {
-				background: var(--cyan);
+			.banner-face {
+				fill: var(--cyan);
 			}
 		
 			.cursor {
@@ -527,7 +520,14 @@
 			<div class="cmd">whoami</div>
 		
 			<div class="banner-wrap">
-				<h1 class="banner" id="banner" role="img" aria-label="gittles"></h1>
+				<svg class="banner" id="banner" viewBox="0 0 2160 240" role="img" aria-label="gittles" preserveAspectRatio="xMinYMid meet">
+					<g class="banner-outline">
+						<rect x="280" y="15" width="25" height="10"/><rect x="440" y="15" width="25" height="10"/><rect x="800" y="15" width="25" height="10"/><rect x="1160" y="15" width="25" height="10"/><rect x="1280" y="15" width="25" height="10"/><rect x="1800" y="15" width="25" height="10"/><rect x="2120" y="15" width="25" height="10"/><rect x="95" y="55" width="210" height="10"/><rect x="495" y="55" width="105" height="10"/><rect x="695" y="55" width="130" height="10"/><rect x="855" y="55" width="105" height="10"/><rect x="1055" y="55" width="130" height="10"/><rect x="1615" y="55" width="210" height="10"/><rect x="1935" y="55" width="210" height="10"/><rect x="320" y="95" width="25" height="10"/><rect x="1720" y="95" width="25" height="10"/><rect x="2120" y="95" width="25" height="10"/><rect x="1615" y="135" width="130" height="10"/><rect x="1855" y="135" width="185" height="10"/><rect x="15" y="175" width="25" height="10"/><rect x="295" y="175" width="50" height="10"/><rect x="1480" y="175" width="25" height="10"/><rect x="1800" y="175" width="25" height="10"/><rect x="55" y="215" width="250" height="10"/><rect x="375" y="215" width="90" height="10"/><rect x="615" y="215" width="90" height="10"/><rect x="975" y="215" width="90" height="10"/><rect x="1215" y="215" width="290" height="10"/><rect x="1535" y="215" width="290" height="10"/><rect x="1855" y="215" width="290" height="10"/><rect x="295" y="15" width="10" height="50"/><rect x="295" y="175" width="10" height="50"/><rect x="455" y="15" width="10" height="210"/><rect x="815" y="15" width="10" height="50"/><rect x="1175" y="15" width="10" height="50"/><rect x="1295" y="15" width="10" height="145"/><rect x="1815" y="15" width="10" height="50"/><rect x="1815" y="175" width="10" height="50"/><rect x="2135" y="15" width="10" height="50"/><rect x="2135" y="95" width="10" height="130"/><rect x="95" y="55" width="10" height="105"/><rect x="495" y="40" width="10" height="25"/><rect x="695" y="55" width="10" height="170"/><rect x="855" y="40" width="10" height="25"/><rect x="1055" y="55" width="10" height="170"/><rect x="1615" y="55" width="10" height="25"/><rect x="1615" y="135" width="10" height="25"/><rect x="1935" y="55" width="10" height="25"/><rect x="335" y="95" width="10" height="90"/><rect x="1735" y="95" width="10" height="50"/><rect x="1855" y="120" width="10" height="25"/><rect x="1855" y="200" width="10" height="25"/><rect x="15" y="160" width="10" height="25"/><rect x="1495" y="175" width="10" height="50"/><rect x="55" y="200" width="10" height="25"/><rect x="375" y="200" width="10" height="25"/><rect x="615" y="200" width="10" height="25"/><rect x="975" y="200" width="10" height="25"/><rect x="1215" y="200" width="10" height="25"/><rect x="1535" y="200" width="10" height="25"/>
+					</g>
+					<g class="banner-face">
+						<rect x="40" y="0" width="240" height="40"/><rect x="360" y="0" width="80" height="40"/><rect x="480" y="0" width="320" height="40"/><rect x="840" y="0" width="320" height="40"/><rect x="1200" y="0" width="80" height="40"/><rect x="1520" y="0" width="280" height="40"/><rect x="1840" y="0" width="280" height="40"/><rect x="0" y="40" width="80" height="40"/><rect x="360" y="40" width="80" height="40"/><rect x="600" y="40" width="80" height="40"/><rect x="960" y="40" width="80" height="40"/><rect x="1200" y="40" width="80" height="40"/><rect x="1520" y="40" width="80" height="40"/><rect x="1840" y="40" width="80" height="40"/><rect x="0" y="80" width="80" height="40"/><rect x="200" y="80" width="120" height="40"/><rect x="360" y="80" width="80" height="40"/><rect x="600" y="80" width="80" height="40"/><rect x="960" y="80" width="80" height="40"/><rect x="1200" y="80" width="80" height="40"/><rect x="1520" y="80" width="200" height="40"/><rect x="1840" y="80" width="280" height="40"/><rect x="0" y="120" width="80" height="40"/><rect x="240" y="120" width="80" height="40"/><rect x="360" y="120" width="80" height="40"/><rect x="600" y="120" width="80" height="40"/><rect x="960" y="120" width="80" height="40"/><rect x="1200" y="120" width="80" height="40"/><rect x="1520" y="120" width="80" height="40"/><rect x="2040" y="120" width="80" height="40"/><rect x="40" y="160" width="240" height="40"/><rect x="360" y="160" width="80" height="40"/><rect x="600" y="160" width="80" height="40"/><rect x="960" y="160" width="80" height="40"/><rect x="1200" y="160" width="280" height="40"/><rect x="1520" y="160" width="280" height="40"/><rect x="1840" y="160" width="280" height="40"/>
+					</g>
+				</svg>
 			</div>
 		
 			<p class="tag">like skittles for your GitHub stars<span class="cursor"></span></p>
@@ -635,39 +635,6 @@
 		</div>
 		
 		<script>
-			// The CLI's banner, letterform for letterform: cfonts' block font, with the
-			// solid face taken as the shape. Drawn as cells so no font can distort it, and
-			// the gold layer comes from a drop-shadow rather than a second set of glyphs.
-			const ART = [
-				" ██████╗ ██╗████████╗████████╗██╗     ███████╗███████╗",
-				"██╔════╝ ██║╚══██╔══╝╚══██╔══╝██║     ██╔════╝██╔════╝",
-				"██║  ███╗██║   ██║      ██║   ██║     █████╗  ███████╗",
-				"██║   ██║██║   ██║      ██║   ██║     ██╔══╝  ╚════██║",
-				"╚██████╔╝██║   ██║      ██║   ███████╗███████╗███████║",
-				" ╚═════╝ ╚═╝   ╚═╝      ╚═╝   ╚══════╝╚══════╝╚══════╝",
-			];
-		
-			const banner = document.getElementById("banner");
-			const width = Math.max(...ART.map(line => line.length));
-			// The last row of the art is all shadow, so it holds no face cells.
-			const rows = ART.filter(line => line.includes("█"));
-		
-			for (const line of rows) {
-				const row = document.createElement("div");
-				row.className = "banner-row";
-		
-				for (let i = 0; i < width; i += 1) {
-					const cell = document.createElement("i");
-					if (line[i] === "█") {
-						cell.className = "banner-on";
-					}
-		
-					row.append(cell);
-				}
-		
-				banner.append(row);
-			}
-		
 			const button = document.getElementById("copy");
 			const command =
 				"curl -fsSL https://raw.githubusercontent.com/jakeklassen/gittles-cli/main/install.sh | sh";
