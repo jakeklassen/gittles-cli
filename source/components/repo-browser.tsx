@@ -48,7 +48,7 @@ export default function RepoBrowser({octokit}: RepoBrowserProps) {
 	const visibleStars = filteredStars.slice(startIndex, startIndex + visibleCount);
 
 	useEffect(() => {
-		db.select({
+		void db.select({
 			id: starsTable.id,
 			name: starsTable.name,
 			fullName: starsTable.fullName,
@@ -130,7 +130,7 @@ export default function RepoBrowser({octokit}: RepoBrowserProps) {
 			setIsCommitting(true);
 			const toUnstar = stars.filter(s => markedForUnstar.has(s.id));
 
-			Promise.all(
+			void Promise.all(
 				toUnstar.map(async star => {
 					const [owner, repo] = star.fullName.split('/');
 					await octokit.request('DELETE /user/starred/{owner}/{repo}', {
