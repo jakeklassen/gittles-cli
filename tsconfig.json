@@ -1,9 +1,13 @@
 {
-	"extends": "@sindresorhus/tsconfig",
 	"compilerOptions": {
-		"outDir": "dist",
-		"rootDir": "source",
-		"types": ["node", "react"]
+		"target": "ES2022",
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"noEmit": true,
+		"types": ["node"]
 	},
 	"include": ["source"]
 }

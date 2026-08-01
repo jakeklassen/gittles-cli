@@ -1,15 +1,15 @@
-name: spike release (scriptc)
+name: release
 
-# Builds the native spike CLI for every platform and publishes a GitHub release whose
-# asset names and checksums file are exactly what spike/scriptc/update.ts expects.
+# Builds the CLI for every platform and publishes a GitHub release whose asset names
+# and checksums file are exactly what source/update.ts expects.
 #
-# Everything cross-compiles from one Linux runner: the spike is 100% static tier, and
+# Everything cross-compiles from one Linux runner: the binary is 100% static tier, and
 # only --dynamic builds are host-native. clang is shimmed to `zig cc` because scriptc's
 # vendored mbedtls/quickjs builds invoke `clang` directly, ignoring SCRIPTC_CC.
 
 on:
   push:
-    tags: ['spike-v*']
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       version:
@@ -23,7 +23,6 @@ permissions:
 
 env:
   ZIG_VERSION: '0.16.0'
-  SCRIPTC_VERSION: '0.0.21'
 
 jobs:
   release:
@@ -31,9 +30,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
+          cache: pnpm
 
       - name: Resolve version
         id: version
@@ -41,13 +43,15 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             VERSION="${{ inputs.version }}"
           else
-            VERSION="${GITHUB_REF_NAME#spike-v}"
+            VERSION="${GITHUB_REF_NAME#v}"
           fi
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "tag=spike-v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
 
-      - name: Install scriptc
-        run: npm install -g "scriptc@${SCRIPTC_VERSION}"
+      # scriptc's typecheck gate needs @types/node; without it, it falls back to its
+      # own narrower ambient declarations and rejects things like stdin's 'data' event.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Install zig and shim it as clang
         run: |
@@ -58,22 +62,24 @@ jobs:
           chmod +x "${PWD}/shim/clang"
           echo "${PWD}/shim" >> "$GITHUB_PATH"
 
+      - name: Check
+        run: pnpm test
+
       - name: Stamp the version into the binary
-        working-directory: spike/scriptc
         run: |
-          sed -i "s/^export const VERSION = '.*';/export const VERSION = '${{ steps.version.outputs.version }}';/" update.ts
-          grep '^export const VERSION' update.ts
+          sed -i "s/^export const VERSION = '.*';/export const VERSION = '${{ steps.version.outputs.version }}';/" source/update.ts
+          grep '^export const VERSION' source/update.ts
 
       - name: Build every target
-        working-directory: spike/scriptc
         run: |
           set -eux
           mkdir -p dist
 
-          # asset name -> scriptc target triple. The names must match assetNameFor():
+          # Asset names must match assetNameFor():
           # `gittles-${process.platform}-${process.arch}`.
           build() {
-            SCRIPTC_CC=zigcc SCRIPTC_TARGET="$2" scriptc build main.ts -o "dist/$1"
+            SCRIPTC_CC=zigcc SCRIPTC_TARGET="$2" \
+              ./node_modules/.bin/scriptc build source/main.ts -o "dist/$1"
           }
 
           build gittles-linux-x64      x86_64-linux-gnu.2.36
@@ -90,7 +96,7 @@ jobs:
           ls -la dist
 
       - name: Checksums
-        working-directory: spike/scriptc/dist
+        working-directory: dist
         run: |
           # `<digest>  <name>` — the format digestFor() parses.
           sha256sum gittles-* > checksums.txt
@@ -99,21 +105,20 @@ jobs:
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v4
         with:
-          subject-path: spike/scriptc/dist/gittles-*
+          subject-path: dist/gittles-*
 
       - name: Smoke-test the native binary
-        working-directory: spike/scriptc/dist
+        working-directory: dist
         run: |
-          ./gittles-linux-x64 version
           test "$(./gittles-linux-x64 version)" = "${{ steps.version.outputs.version }}"
           ./gittles-linux-x64 help | head -3
 
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
-        working-directory: spike/scriptc/dist
+        working-directory: dist
         run: |
           gh release create "${{ steps.version.outputs.tag }}" \
-            --title "spike ${{ steps.version.outputs.version }}" \
-            --notes "Native scriptc build of the gittles spike. Self-update: \`gittles update\`." \
+            --title "${{ steps.version.outputs.version }}" \
+            --notes "Native gittles build. Install: \`curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | sh\`" \
             gittles-* checksums.txt

@@ -1,29 +1,34 @@
-# scriptc spike
+# gittles
 
-A vertical slice of gittles compiled to a native binary with
-[scriptc](https://github.com/vercel-labs/scriptc) (v0.0.21), to find out whether this
-CLI can ship as a single self-contained executable with no Node and no JS engine.
+Browse your GitHub stars from the terminal. A single native binary — **no Node, no V8,
+no JavaScript engine, and no npm dependencies at runtime** — built from ordinary
+TypeScript with [scriptc](https://github.com/vercel-labs/scriptc).
 
-**Result:** yes, but only without the current dependency stack. The whole app —
-device-flow login, sync, and the interactive browser — is
-`scriptc coverage` = **641/641 statements static (100%)** → 4.2 MB ELF, ~1 ms startup,
-1,668 lines of TypeScript, and **zero npm dependencies**.
+`scriptc coverage` reports **943/943 statements static (100%)**: 4.2 MB, ~11 ms to first
+frame, against ~500-1300 ms for the previous Ink implementation.
 
-## Files
+## Install
 
-| File              | What it replaces                                                       |
-| ----------------- | ---------------------------------------------------------------------- |
-| `github.ts`       | `@octokit/rest` — one `node:https` request fn, `JSON.parse(body) as T` |
-| `auth.ts`         | `@octokit/auth-oauth-device` — device flow with polling                |
-| `store.ts`        | `@libsql/client` + drizzle + `conf` — JSON files in `~/.config`        |
-| `ansi.ts`         | `chalk` + `supports-color` + `date-fns` + `Intl`                       |
-| `terminal.ts`     | `ink`'s input layer + `open` + `terminal-size` — key decoding, `stty`  |
-| `browser.ts`      | `ink` + `react` — the full TUI as one render function                  |
-| `spinner.ts`      | `ink-spinner` — braille spinner + progress bar                         |
-| `banner.ts`       | `cfonts` — its `block` font art, in both color layers                  |
-| `update.ts`       | `update-notifier` — release check, verified download, self-replace     |
-| `main.ts`         | `meow` — `process.argv`                                                |
-| `spinner-demo.ts` | standalone spinner/progress demo                                       |
+```console
+$ curl -fsSL https://raw.githubusercontent.com/jakeklassen/gittles-cli/main/install.sh | sh
+```
+
+## Source layout
+
+Every file replaces a dependency the Ink version needed:
+
+| File                 | What it replaces                                                        |
+| -------------------- | ----------------------------------------------------------------------- |
+| `source/github.ts`   | `@octokit/rest` — one `node:https` request fn, `JSON.parse(body) as T`  |
+| `source/auth.ts`     | `@octokit/auth-oauth-device` — device flow with polling                 |
+| `source/store.ts`    | `@libsql/client` + drizzle + `conf` — JSON files in `~/.config/gittles` |
+| `source/ansi.ts`     | `chalk` + `supports-color` + `date-fns` + `Intl`                        |
+| `source/terminal.ts` | `ink`'s input layer + `open` + `terminal-size` — key decoding, `stty`   |
+| `source/browser.ts`  | `ink` + `react` — the whole TUI as one render function                  |
+| `source/spinner.ts`  | `ink-spinner` — braille spinner + progress bar                          |
+| `source/banner.ts`   | `cfonts` — its `block` font art, in both color layers                   |
+| `source/update.ts`   | `update-notifier` — release check, verified download, self-replace      |
+| `source/main.ts`     | `meow` — `process.argv`                                                 |
 
 ## What it looks like
 
@@ -95,7 +100,7 @@ authorized:
 
 The cursor is restored on every exit path, including failures and Ctrl-C.
 
-## Things worth knowing if you extend it
+## Things worth knowing if you work on it
 
 - **Color detection is real**: `NO_COLOR`, `FORCE_COLOR`, `TERM`, `COLORTERM` and
   `process.stdout.isTTY` (which _is_ lowered, unlike `.columns`). Piping the output
@@ -136,7 +141,7 @@ The cursor is restored on every exit path, including failures and Ctrl-C.
 
 ## Terminal polish: what the static tier gives you
 
-Verified by building and running `spinner-demo.ts` (100% static, 3.7 MB):
+All verified by building and running, not assumed:
 
 - **Spinners** — `setInterval` animates all 10 braille frames _while a real HTTPS request
   is in flight_; the event loop is epoll on Linux, so timers and I/O interleave properly.
@@ -259,7 +264,7 @@ double the wakeups, which is not worth it.
 ## Installing
 
 ```console
-$ curl -fsSL https://raw.githubusercontent.com/jakeklassen/gittles-cli/main/spike/scriptc/install.sh | sh
+$ curl -fsSL https://raw.githubusercontent.com/jakeklassen/gittles-cli/main/install.sh | sh
 ```
 
 Defaults to `~/.local/bin`, which keeps `gittles update` working without sudo.
@@ -271,14 +276,12 @@ the same names `assetNameFor()` builds — verifies the SHA-256 against the rele
 verifies build provenance through the gh CLI. The whole script is wrapped in `main()`
 and invoked on the last line, so a truncated download cannot half-execute.
 
-## Building from source
+## Developing
 
 ```console
-$ npm install -g scriptc          # needs clang; on Linux, zig works via a clang shim
-$ scriptc build main.ts -o gittles
-$ ./gittles login                 # GitHub device flow
-$ ./gittles sync [limit]          # pull your stars
-$ ./gittles                       # browse them
+$ pnpm install                    # scriptc, plus @types/node for its typecheck gate
+$ pnpm build                      # needs clang; on Linux, zig works via a clang shim
+$ pnpm test                       # oxfmt, oxlint, tsc, vitest
 ```
 
 On Linux the vendored mbedtls/quickjs builds invoke `clang` directly and ignore

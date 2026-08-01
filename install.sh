@@ -1,12 +1,12 @@
 #!/bin/sh
 # Install the native gittles CLI.
 #
-#   curl -fsSL https://raw.githubusercontent.com/jakeklassen/gittles-cli/main/spike/scriptc/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/jakeklassen/gittles-cli/main/install.sh | sh
 #
 # Environment:
 #   GITTLES_INSTALL_DIR   where to install (default: ~/.local/bin)
 #   GITTLES_VERSION       version to install, e.g. 0.2.0 (default: latest)
-#   GITTLES_TAG           exact release tag, when it is not spike-v$GITTLES_VERSION
+#   GITTLES_TAG           exact release tag, when it is not v$GITTLES_VERSION
 #   GITTLES_REPO          release repo (default: jakeklassen/gittles-cli)
 #   GITTLES_ASSET         asset name override; normally derived from your platform
 #   GITTLES_VERIFY_ATTESTATION=1
@@ -96,7 +96,7 @@ main() {
 	elif [ "$VERSION" = latest ]; then
 		base="https://github.com/${REPO}/releases/latest/download"
 	else
-		base="https://github.com/${REPO}/releases/download/spike-v${VERSION}"
+		base="https://github.com/${REPO}/releases/download/v${VERSION}"
 	fi
 
 	tmp=$(mktemp -d)

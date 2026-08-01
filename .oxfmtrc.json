@@ -5,6 +5,5 @@
 	"quoteProps": "as-needed",
 	"bracketSpacing": false,
 	"arrowParens": "avoid",
-	"trailingComma": "all",
-	"ignorePatterns": ["drizzle/meta/**", "dist/**"]
+	"trailingComma": "all"
 }

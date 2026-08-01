@@ -3,7 +3,7 @@ import path from 'node:path';
 import os from 'node:os';
 import type {Star} from './github.js';
 
-const dir = path.join(os.homedir(), '.config', 'gittles-spike');
+const dir = path.join(os.homedir(), '.config', 'gittles');
 const starsFile = path.join(dir, 'stars.json');
 const configFile = path.join(dir, 'config.json');
 

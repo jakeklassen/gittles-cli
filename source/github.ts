@@ -42,7 +42,7 @@ type ApiUser = {
 };
 
 const API_HOST = 'api.github.com';
-const USER_AGENT = 'gittles-scriptc-spike';
+const USER_AGENT = 'gittles-cli';
 
 /** @octokit/rest, minus octokit: one request function over node:https. */
 export function request(
