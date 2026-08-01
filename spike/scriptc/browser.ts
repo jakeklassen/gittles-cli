@@ -46,7 +46,6 @@ import {
 	repeat,
 	showCursor,
 	strike,
-	style,
 	truncate,
 	yellow,
 } from './ansi.js';
