@@ -162,23 +162,34 @@
 		
 			/* ── hero banner ─────────────────────────────────────────────────────── */
 		
+			/* The wordmark is drawn as a grid of cells, not typed as text. The block and
+			   box-drawing characters in the CLI's banner come from different fallback fonts
+			   in a browser, and their advance widths disagree — which tears the two layers
+			   apart. Cells cannot drift. */
 			.banner-wrap {
 				overflow-x: auto;
-				padding: 4px 0 2px;
+				padding: 6px 0 2px;
 				scrollbar-width: thin;
 			}
 		
 			.banner {
-				font-family: var(--mono);
-				font-size: clamp(6px, 1.65vw, 12px);
-				line-height: 1.12;
-				margin: 0;
-				white-space: pre;
-				color: var(--cyan);
+				--cell: clamp(3px, 1.05vw, 7px);
+				display: grid;
+				grid-auto-rows: var(--cell);
+				gap: 0;
+				width: max-content;
+				filter: drop-shadow(calc(var(--cell) * 0.9) calc(var(--cell) * 0.9) 0 var(--gold));
 			}
 		
-			.banner .o {
-				color: var(--gold);
+			.banner-row {
+				display: grid;
+				grid-auto-flow: column;
+				grid-auto-columns: var(--cell);
+				height: var(--cell);
+			}
+		
+			.banner-on {
+				background: var(--cyan);
 			}
 		
 			.cursor {
@@ -516,12 +527,7 @@
 			<div class="cmd">whoami</div>
 		
 			<div class="banner-wrap">
-				<pre class="banner" id="banner" aria-label="GITTLES"> ██████╗ ██╗████████╗████████╗██╗     ███████╗███████╗
-		██╔════╝ ██║╚══██╔══╝╚══██╔══╝██║     ██╔════╝██╔════╝
-		██║  ███╗██║   ██║      ██║   ██║     █████╗  ███████╗
-		██║   ██║██║   ██║      ██║   ██║     ██╔══╝  ╚════██║
-		╚██████╔╝██║   ██║      ██║   ███████╗███████╗███████║
-		 ╚═════╝ ╚═╝   ╚═╝      ╚═╝   ╚══════╝╚══════╝╚══════╝</pre>
+				<h1 class="banner" id="banner" role="img" aria-label="gittles"></h1>
 			</div>
 		
 			<p class="tag">like skittles for your GitHub stars<span class="cursor"></span></p>
@@ -629,16 +635,38 @@
 		</div>
 		
 		<script>
-			// Color the banner the way the CLI does: cfonts paints its block font in two
-			// layers, so the solid face is cyan and the box-drawing outline is gold.
+			// The CLI's banner, letterform for letterform: cfonts' block font, with the
+			// solid face taken as the shape. Drawn as cells so no font can distort it, and
+			// the gold layer comes from a drop-shadow rather than a second set of glyphs.
+			const ART = [
+				" ██████╗ ██╗████████╗████████╗██╗     ███████╗███████╗",
+				"██╔════╝ ██║╚══██╔══╝╚══██╔══╝██║     ██╔════╝██╔════╝",
+				"██║  ███╗██║   ██║      ██║   ██║     █████╗  ███████╗",
+				"██║   ██║██║   ██║      ██║   ██║     ██╔══╝  ╚════██║",
+				"╚██████╔╝██║   ██║      ██║   ███████╗███████╗███████║",
+				" ╚═════╝ ╚═╝   ╚═╝      ╚═╝   ╚══════╝╚══════╝╚══════╝",
+			];
+		
 			const banner = document.getElementById("banner");
-			banner.innerHTML = [...banner.textContent]
-				.map(ch =>
-					ch === "█" || ch === " " || ch === "\n"
-						? ch
-						: `<span class="o">${ch}</span>`,
-				)
-				.join("");
+			const width = Math.max(...ART.map(line => line.length));
+			// The last row of the art is all shadow, so it holds no face cells.
+			const rows = ART.filter(line => line.includes("█"));
+		
+			for (const line of rows) {
+				const row = document.createElement("div");
+				row.className = "banner-row";
+		
+				for (let i = 0; i < width; i += 1) {
+					const cell = document.createElement("i");
+					if (line[i] === "█") {
+						cell.className = "banner-on";
+					}
+		
+					row.append(cell);
+				}
+		
+				banner.append(row);
+			}
 		
 			const button = document.getElementById("copy");
 			const command =
