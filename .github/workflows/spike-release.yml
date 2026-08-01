@@ -1,0 +1,119 @@
+name: spike release (scriptc)
+
+# Builds the native spike CLI for every platform and publishes a GitHub release whose
+# asset names and checksums file are exactly what spike/scriptc/update.ts expects.
+#
+# Everything cross-compiles from one Linux runner: the spike is 100% static tier, and
+# only --dynamic builds are host-native. clang is shimmed to `zig cc` because scriptc's
+# vendored mbedtls/quickjs builds invoke `clang` directly, ignoring SCRIPTC_CC.
+
+on:
+  push:
+    tags: ['spike-v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build and release, e.g. 0.2.0'
+        required: true
+
+permissions:
+  contents: write
+  id-token: write # sigstore build provenance
+  attestations: write
+
+env:
+  ZIG_VERSION: '0.16.0'
+  SCRIPTC_VERSION: '0.0.21'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#spike-v}"
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=spike-v${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Install scriptc
+        run: npm install -g "scriptc@${SCRIPTC_VERSION}"
+
+      - name: Install zig and shim it as clang
+        run: |
+          curl -sSL "https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz" | tar -xJ
+          echo "${PWD}/zig-x86_64-linux-${ZIG_VERSION}" >> "$GITHUB_PATH"
+          mkdir -p "${PWD}/shim"
+          printf '#!/bin/sh\nexec zig cc "$@"\n' > "${PWD}/shim/clang"
+          chmod +x "${PWD}/shim/clang"
+          echo "${PWD}/shim" >> "$GITHUB_PATH"
+
+      - name: Stamp the version into the binary
+        working-directory: spike/scriptc
+        run: |
+          sed -i "s/^export const VERSION = '.*';/export const VERSION = '${{ steps.version.outputs.version }}';/" update.ts
+          grep '^export const VERSION' update.ts
+
+      - name: Build every target
+        working-directory: spike/scriptc
+        run: |
+          set -eux
+          mkdir -p dist
+
+          # asset name -> scriptc target triple. The names must match assetNameFor():
+          # `gittles-${process.platform}-${process.arch}`.
+          build() {
+            SCRIPTC_CC=zigcc SCRIPTC_TARGET="$2" scriptc build main.ts -o "dist/$1"
+          }
+
+          build gittles-linux-x64      x86_64-linux-gnu.2.36
+          build gittles-linux-arm64    aarch64-linux-gnu.2.36
+          build gittles-darwin-arm64   aarch64-macos
+          build gittles-darwin-x64     x86_64-macos
+
+          # EXPERIMENTAL: this links, but scriptc's Windows port does not yet include
+          # the socket stack (net/http/https/tls) or child_process, so login/sync/update
+          # are expected to fail at runtime. Published for testing, not for use.
+          build gittles-win32-x64.exe  x86_64-windows-gnu || echo "windows build failed (expected)"
+
+          chmod +x dist/*
+          ls -la dist
+
+      - name: Checksums
+        working-directory: spike/scriptc/dist
+        run: |
+          # `<digest>  <name>` — the format digestFor() parses.
+          sha256sum gittles-* > checksums.txt
+          cat checksums.txt
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: spike/scriptc/dist/gittles-*
+
+      - name: Smoke-test the native binary
+        working-directory: spike/scriptc/dist
+        run: |
+          ./gittles-linux-x64 version
+          test "$(./gittles-linux-x64 version)" = "${{ steps.version.outputs.version }}"
+          ./gittles-linux-x64 help | head -3
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: spike/scriptc/dist
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --title "spike ${{ steps.version.outputs.version }}" \
+            --notes "Native scriptc build of the gittles spike. Self-update: \`gittles update\`." \
+            gittles-* checksums.txt
