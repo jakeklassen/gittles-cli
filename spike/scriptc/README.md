@@ -256,7 +256,22 @@ Median tracks half the interval, as polling does. 100 ms puts the median inside 
 ~100 ms window where a response still reads as immediate; 50 ms buys ~10 ms more for
 double the wakeups, which is not worth it.
 
-## Building
+## Installing
+
+```console
+$ curl -fsSL https://raw.githubusercontent.com/jakeklassen/gittles-cli/main/spike/scriptc/install.sh | sh
+```
+
+Defaults to `~/.local/bin`, which keeps `gittles update` working without sudo.
+`install.sh` derives the asset name from `uname` using Node's platform/arch spelling —
+the same names `assetNameFor()` builds — verifies the SHA-256 against the release's
+`checksums.txt` (and refuses without one), and warns if the install directory is not on
+`PATH`. `GITTLES_INSTALL_DIR`, `GITTLES_VERSION`, `GITTLES_TAG`, `GITTLES_REPO` and
+`GITTLES_ASSET` override the defaults; `GITTLES_VERIFY_ATTESTATION=1` additionally
+verifies build provenance through the gh CLI. The whole script is wrapped in `main()`
+and invoked on the last line, so a truncated download cannot half-execute.
+
+## Building from source
 
 ```console
 $ npm install -g scriptc          # needs clang; on Linux, zig works via a clang shim
