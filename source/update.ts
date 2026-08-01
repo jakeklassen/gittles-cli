@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 import {spawnSync} from 'node:child_process';
 import {loadConfig, saveConfig} from './store.js';
 
-export const VERSION = '0.1.0';
+export const VERSION = '0.2.0';
 
 const DEFAULT_REPO = 'jakeklassen/gittles-cli';
 const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;

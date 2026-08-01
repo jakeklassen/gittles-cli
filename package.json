@@ -1,6 +1,6 @@
 {
 	"name": "gittles-cli",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"private": true,
 	"description": "Browse your GitHub stars. A native binary — no Node, no JS engine.",
 	"license": "MIT",

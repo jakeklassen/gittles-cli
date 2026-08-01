@@ -46,6 +46,7 @@ import {
 	repeat,
 	showCursor,
 	strike,
+	style,
 	truncate,
 	yellow,
 } from './ansi.js';
@@ -86,6 +87,8 @@ function languageLabel(language: string): string {
 	const color = LANGUAGE_COLORS.get(language);
 	return color === undefined ? dim(language) : fg256(language, color, '34');
 }
+
+const TAGLINE = 'like skittles for your GitHub stars';
 
 type Mode = 'list' | 'search' | 'help' | 'busy';
 
@@ -175,8 +178,12 @@ function headerLines(state: State, width: number): string[] {
 	const config = loadConfig();
 	const account = config.username === '' ? 'not signed in' : config.username;
 
+	// One SGR run, not dim(italic(...)): a nested reset would drop the outer style.
+	// Dropped entirely on narrow terminals rather than crowding out the account name.
+	const tagline = width >= 88 ? `  ${style(TAGLINE, '2;3')}` : '';
+
 	return [
-		`${bold(cyan('★ GITTLES'))}  ${dim('│')}  ${green(account)}`,
+		`${bold(cyan('★ GITTLES'))}${tagline}  ${dim('│')}  ${green(account)}`,
 		dim(
 			`${groupDigits(state.all.length)} stars · synced ${relativeTime(
 				config.lastSyncedAt,
