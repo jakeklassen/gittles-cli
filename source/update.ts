@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 import {spawnSync} from 'node:child_process';
 import {loadConfig, saveConfig} from './store.js';
 
-export const VERSION = '0.3.0';
+export const VERSION = '0.3.1';
 
 const DEFAULT_REPO = 'jakeklassen/gittles-cli';
 const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
@@ -110,8 +110,8 @@ export function isNewer(candidate: string, current: string): boolean {
 }
 
 function parseVersion(version: string): number[] {
-	// Tags carry prefixes: 'v1.2.3', and this spike releases as 'spike-v1.2.3'.
-	// Start at the first digit so the major number is never lost to the prefix.
+	// Release tags carry a 'v' prefix. Start at the first digit so the major number
+	// is never lost to the prefix.
 	let start = 0;
 	while (start < version.length) {
 		const code = version.charCodeAt(start);
@@ -189,26 +189,59 @@ export async function fetchLatestRelease(): Promise<Release> {
 /**
  * The cached answer to "is there anything newer", refreshed at most daily. A network
  * round-trip on every launch would cost more than the entire rest of the program.
+ *
+ * The cache records which repo it came from and is a miss when that no longer matches:
+ * a version cached from a different repo says nothing about this one, and a day of
+ * showing somebody else's release as available is a day of lying.
+ *
+ * Nothing is written at all while GITTLES_UPDATE_REPO is set. That override exists for
+ * testing, and a test must not leave state behind that outlives it.
  */
+export function isCacheUsable(
+	cachedRepo: string,
+	currentRepo: string,
+	lastCheck: string,
+	now: number,
+): boolean {
+	if (cachedRepo !== currentRepo || lastCheck === '') {
+		return false;
+	}
+
+	const age = now - Number(lastCheck);
+	return age >= 0 && age < CHECK_INTERVAL_MS;
+}
+
 export async function checkForUpdate(force: boolean): Promise<string> {
 	const config = loadConfig();
-	const last = config.lastUpdateCheck ?? '';
+	const overridden = process.env['GITTLES_UPDATE_REPO'] !== undefined;
 	const cached = config.latestVersion ?? '';
 
-	if (!force && last !== '' && Date.now() - Number(last) < CHECK_INTERVAL_MS) {
+	const usable = isCacheUsable(
+		config.latestRepo ?? '',
+		repo(),
+		config.lastUpdateCheck ?? '',
+		Date.now(),
+	);
+
+	if (!force && !overridden && usable) {
 		return isNewer(cached, VERSION) ? cached : '';
 	}
 
 	try {
 		const release = await fetchLatestRelease();
-		saveConfig({
-			token: config.token,
-			username: config.username,
-			lastSyncedAt: config.lastSyncedAt,
-			lastUpdateCheck: `${Date.now()}`,
-			latestVersion: release.version,
-			skippedVersion: config.skippedVersion ?? '',
-		});
+
+		if (!overridden) {
+			saveConfig({
+				token: config.token,
+				username: config.username,
+				lastSyncedAt: config.lastSyncedAt,
+				lastUpdateCheck: `${Date.now()}`,
+				latestVersion: release.version,
+				latestRepo: repo(),
+				skippedVersion: config.skippedVersion ?? '',
+			});
+		}
+
 		return isNewer(release.version, VERSION) ? release.version : '';
 	} catch {
 		// An update check must never be the reason the CLI fails.
@@ -224,6 +257,7 @@ export function skipVersion(version: string): void {
 		lastSyncedAt: config.lastSyncedAt,
 		lastUpdateCheck: config.lastUpdateCheck ?? '',
 		latestVersion: config.latestVersion ?? '',
+		latestRepo: config.latestRepo ?? '',
 		skippedVersion: version,
 	});
 }

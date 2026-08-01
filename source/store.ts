@@ -19,6 +19,8 @@ export type Config = {
 	lastSyncedAt: string;
 	lastUpdateCheck?: string;
 	latestVersion?: string;
+	/** Which repo `latestVersion` came from; a different one invalidates it. */
+	latestRepo?: string;
 	skippedVersion?: string;
 };
 
@@ -55,6 +57,7 @@ export function clearAuth(): void {
 		lastSyncedAt: config.lastSyncedAt,
 		lastUpdateCheck: config.lastUpdateCheck,
 		latestVersion: config.latestVersion,
+		latestRepo: config.latestRepo,
 		skippedVersion: config.skippedVersion,
 	});
 }
@@ -93,6 +96,7 @@ export function markSynced(): void {
 		lastSyncedAt: new Date(Date.now()).toISOString(),
 		lastUpdateCheck: config.lastUpdateCheck,
 		latestVersion: config.latestVersion,
+		latestRepo: config.latestRepo,
 		skippedVersion: config.skippedVersion,
 	});
 }
