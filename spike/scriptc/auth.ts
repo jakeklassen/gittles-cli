@@ -97,9 +97,7 @@ export async function login(): Promise<string> {
 
 	console.log('');
 	console.log(`  ${dim('1.')} open ${cyan(device.verification_uri)}`);
-	console.log(
-		`  ${dim('2.')} enter the code ${bold(yellow(device.user_code))}`,
-	);
+	console.log(`  ${dim('2.')} enter the code ${bold(yellow(device.user_code))}`);
 	console.log('');
 
 	if (openUrl(device.verification_uri)) {
@@ -122,9 +120,7 @@ export async function login(): Promise<string> {
 		spinner.succeed(`authorized as ${green(username)}`);
 		return token;
 	} catch (error: unknown) {
-		spinner.fail(
-			`login failed: ${error instanceof Error ? error.message : String(error)}`,
-		);
+		spinner.fail(`login failed: ${error instanceof Error ? error.message : String(error)}`);
 		throw error;
 	}
 }

@@ -45,27 +45,19 @@ export default function App({command, limit}: AppProps) {
 
 	if (command === 'sync') {
 		if (!octokit) {
-			return (
-				<Text color="red">Not authenticated. Please run gittles first.</Text>
-			);
+			return <Text color="red">Not authenticated. Please run gittles first.</Text>;
 		}
 
 		if (syncComplete && syncResult) {
 			return (
 				<Text color="green">
-					Sync complete! Added: {syncResult.added}, Removed:{' '}
-					{syncResult.removed}, Updated: {syncResult.updated}
+					Sync complete! Added: {syncResult.added}, Removed: {syncResult.removed}, Updated:{' '}
+					{syncResult.updated}
 				</Text>
 			);
 		}
 
-		return (
-			<SyncStars
-				octokit={octokit}
-				onComplete={handleSyncComplete}
-				limit={limit}
-			/>
-		);
+		return <SyncStars octokit={octokit} onComplete={handleSyncComplete} limit={limit} />;
 	}
 
 	return <RepoBrowser octokit={octokit} />;

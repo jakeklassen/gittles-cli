@@ -47,11 +47,7 @@ export function startSpinner(initialLabel: string): Spinner {
 }
 
 /** A block-drawing progress bar, for when the total is known. */
-export function progressBar(
-	done: number,
-	total: number,
-	width: number,
-): string {
+export function progressBar(done: number, total: number, width: number): string {
 	const ratio = total === 0 ? 0 : done / total;
 	const filled = Math.round(ratio * width);
 	let bar = '';

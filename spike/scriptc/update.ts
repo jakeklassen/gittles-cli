@@ -85,11 +85,7 @@ async function getFollowing(url: string, accept: string): Promise<Fetched> {
 
 	for (let hop = 0; hop < 5; hop += 1) {
 		const response = await get(current, accept);
-		if (
-			response.location === '' ||
-			response.status < 300 ||
-			response.status > 399
-		) {
+		if (response.location === '' || response.status < 300 || response.status > 399) {
 			return response;
 		}
 
@@ -262,16 +258,12 @@ function verifyAttestation(file: string): string {
 		return 'unavailable';
 	}
 
-	const result = spawnSync(
-		'gh',
-		['attestation', 'verify', file, '--repo', repo()],
-		{stdio: 'ignore'},
-	);
+	const result = spawnSync('gh', ['attestation', 'verify', file, '--repo', repo()], {
+		stdio: 'ignore',
+	});
 
 	if (result.status !== 0) {
-		throw new Error(
-			`build provenance could not be verified for ${repo()} — refusing to install`,
-		);
+		throw new Error(`build provenance could not be verified for ${repo()} — refusing to install`);
 	}
 
 	return 'verified';
@@ -293,13 +285,9 @@ function replaceBinary(staged: string, target: string, version: string): void {
 			throw new Error('could not move the running binary aside');
 		}
 
-		const installResult = spawnSync(
-			'cmd',
-			['/c', 'move', '/y', staged, target],
-			{
-				stdio: 'ignore',
-			},
-		);
+		const installResult = spawnSync('cmd', ['/c', 'move', '/y', staged, target], {
+			stdio: 'ignore',
+		});
 		if (installResult.status !== 0) {
 			// Put the original back rather than leaving no binary at all.
 			spawnSync('cmd', ['/c', 'move', '/y', parked, target], {stdio: 'ignore'});
@@ -384,9 +372,7 @@ export async function installUpdate(
 	try {
 		fs.accessSync(directory, fs.constants.W_OK);
 	} catch {
-		throw new Error(
-			`${directory} is not writable — update manually, or install to ~/.local/bin`,
-		);
+		throw new Error(`${directory} is not writable — update manually, or install to ~/.local/bin`);
 	}
 
 	onProgress(`downloading ${release.assetName}…`);
@@ -401,10 +387,7 @@ export async function installUpdate(
 
 	onProgress('verifying checksum…');
 	const checksums = await getFollowing(release.checksumUrl, '*/*');
-	const expected = digestFor(
-		checksums.body.toString('utf8'),
-		release.assetName,
-	);
+	const expected = digestFor(checksums.body.toString('utf8'), release.assetName);
 	if (expected === '') {
 		throw new Error(`no checksum published for ${release.assetName}`);
 	}

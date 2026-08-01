@@ -1,23 +1,11 @@
 import {fetchStars} from './github.js';
 import type {Star} from './github.js';
-import {
-	clearAuth,
-	loadConfig,
-	loadStars,
-	markSynced,
-	saveStars,
-} from './store.js';
+import {clearAuth, loadConfig, loadStars, markSynced, saveStars} from './store.js';
 import {browse} from './browser.js';
 import {login} from './auth.js';
 import {banner} from './banner.js';
 import {startSpinner, progressBar} from './spinner.js';
-import {
-	cleanupAfterUpdate,
-	fetchLatestRelease,
-	installUpdate,
-	isNewer,
-	VERSION,
-} from './update.js';
+import {cleanupAfterUpdate, fetchLatestRelease, installUpdate, isNewer, VERSION} from './update.js';
 import {bold, cyan, dim, green, groupDigits, red, yellow} from './ansi.js';
 
 const args = process.argv.slice(2);
@@ -77,9 +65,7 @@ async function ensureToken(): Promise<string> {
 
 	console.log(banner());
 	console.log('');
-	console.log(
-		`  ${bold('welcome to gittles')} ${dim('— sign in to get started')}`,
-	);
+	console.log(`  ${bold('welcome to gittles')} ${dim('— sign in to get started')}`);
 	return login();
 }
 
@@ -98,13 +84,9 @@ async function sync(token: string, limit: number): Promise<void> {
 
 		saveStars(stars);
 		markSynced();
-		spinner.succeed(
-			`synced ${groupDigits(stars.length)} stars  ${diffSummary(previous, stars)}`,
-		);
+		spinner.succeed(`synced ${groupDigits(stars.length)} stars  ${diffSummary(previous, stars)}`);
 	} catch (error: unknown) {
-		spinner.fail(
-			`sync failed: ${error instanceof Error ? error.message : String(error)}`,
-		);
+		spinner.fail(`sync failed: ${error instanceof Error ? error.message : String(error)}`);
 		process.exit(1);
 	}
 }
@@ -126,20 +108,14 @@ async function update(): Promise<void> {
 		});
 		spinner.succeed(`updated ${VERSION} → ${installed}`);
 	} catch (error: unknown) {
-		spinner.fail(
-			`update failed: ${error instanceof Error ? error.message : String(error)}`,
-		);
+		spinner.fail(`update failed: ${error instanceof Error ? error.message : String(error)}`);
 		process.exit(1);
 	}
 }
 
 if (command === 'help' || command === '--help' || command === '-h') {
 	usage();
-} else if (
-	command === 'version' ||
-	command === '--version' ||
-	command === '-v'
-) {
+} else if (command === 'version' || command === '--version' || command === '-v') {
 	console.log(VERSION);
 } else if (command === 'update') {
 	await update();

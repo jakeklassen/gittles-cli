@@ -27,9 +27,7 @@ export default function RepoBrowser({octokit}: RepoBrowserProps) {
 	const [stars, setStars] = useState<Star[]>([]);
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [loading, setLoading] = useState(true);
-	const [markedForUnstar, setMarkedForUnstar] = useState<Set<number>>(
-		new Set(),
-	);
+	const [markedForUnstar, setMarkedForUnstar] = useState<Set<number>>(new Set());
 	const [isCommitting, setIsCommitting] = useState(false);
 	const [isSearching, setIsSearching] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
@@ -48,16 +46,17 @@ export default function RepoBrowser({octokit}: RepoBrowserProps) {
 	const visibleStars = filteredStars.slice(startIndex, startIndex + visibleCount);
 
 	useEffect(() => {
-		void db.select({
-			id: starsTable.id,
-			name: starsTable.name,
-			fullName: starsTable.fullName,
-			description: starsTable.description,
-			url: starsTable.url,
-			language: starsTable.language,
-			stargazersCount: starsTable.stargazersCount,
-			pushedAt: starsTable.pushedAt,
-		})
+		void db
+			.select({
+				id: starsTable.id,
+				name: starsTable.name,
+				fullName: starsTable.fullName,
+				description: starsTable.description,
+				url: starsTable.url,
+				language: starsTable.language,
+				stargazersCount: starsTable.stargazersCount,
+				pushedAt: starsTable.pushedAt,
+			})
 			.from(starsTable)
 			.orderBy(desc(starsTable.starredAt))
 			.then(result => {
@@ -143,9 +142,7 @@ export default function RepoBrowser({octokit}: RepoBrowserProps) {
 				setStars(prev => prev.filter(s => !markedForUnstar.has(s.id)));
 				setMarkedForUnstar(new Set());
 				setIsCommitting(false);
-				setSelectedIndex(prev =>
-					Math.min(prev, stars.length - toUnstar.length - 1),
-				);
+				setSelectedIndex(prev => Math.min(prev, stars.length - toUnstar.length - 1));
 			});
 		}
 
@@ -166,8 +163,7 @@ export default function RepoBrowser({octokit}: RepoBrowserProps) {
 		return (
 			<Box flexDirection="column">
 				<Text>
-					No stars found. Run <Text color="cyan">gittles sync</Text> to fetch
-					your starred repos.
+					No stars found. Run <Text color="cyan">gittles sync</Text> to fetch your starred repos.
 				</Text>
 				<Text dimColor>Press q to quit</Text>
 			</Box>
@@ -209,7 +205,10 @@ export default function RepoBrowser({octokit}: RepoBrowserProps) {
 						{searchQuery || (isSearching ? '' : '(press s)')}
 					</Text>
 					{searchQuery && (
-						<Text dimColor> ({filteredStars.length} results{!isSearching && ', x to clear'})</Text>
+						<Text dimColor>
+							{' '}
+							({filteredStars.length} results{!isSearching && ', x to clear'})
+						</Text>
 					)}
 				</Text>
 			</Box>
@@ -245,9 +244,7 @@ export default function RepoBrowser({octokit}: RepoBrowserProps) {
 								{star.fullName}
 							</Text>
 							<Text dimColor> </Text>
-							<Text color="yellow">
-								★ {star.stargazersCount.toLocaleString()}
-							</Text>
+							<Text color="yellow">★ {star.stargazersCount.toLocaleString()}</Text>
 							<Text dimColor> • </Text>
 							<Text dimColor>{formatDate(star.pushedAt)}</Text>
 							{star.language && (

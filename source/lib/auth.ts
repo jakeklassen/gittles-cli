@@ -14,9 +14,7 @@ type DeviceVerification = {
 
 export type OnVerificationCallback = (verification: DeviceVerification) => void;
 
-export async function authenticate(
-	onVerification: OnVerificationCallback,
-): Promise<Octokit> {
+export async function authenticate(onVerification: OnVerificationCallback): Promise<Octokit> {
 	const clientId = process.env['GITHUB_CLIENT_ID'] ?? GITHUB_CLIENT_ID;
 
 	const auth = createOAuthDeviceAuth({

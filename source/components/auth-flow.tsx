@@ -12,9 +12,7 @@ type VerificationInfo = {
 };
 
 export default function AuthFlow({onAuthenticated}: AuthFlowProps) {
-	const [verification, setVerification] = useState<VerificationInfo | null>(
-		null,
-	);
+	const [verification, setVerification] = useState<VerificationInfo | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {

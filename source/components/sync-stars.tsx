@@ -10,11 +10,7 @@ type SyncStarsProps = {
 	limit?: number;
 };
 
-export default function SyncStars({
-	octokit,
-	onComplete,
-	limit,
-}: SyncStarsProps) {
+export default function SyncStars({octokit, onComplete, limit}: SyncStarsProps) {
 	const [progress, setProgress] = useState<SyncProgress>({phase: 'fetching'});
 	const [error, setError] = useState<string | null>(null);
 
@@ -58,8 +54,7 @@ export default function SyncStars({
 		<Box flexDirection="column">
 			<Text color="green">Sync complete!</Text>
 			<Text>
-				Added: {progress.added}, Removed: {progress.removed}, Updated:{' '}
-				{progress.updated}
+				Added: {progress.added}, Removed: {progress.removed}, Updated: {progress.updated}
 			</Text>
 		</Box>
 	);

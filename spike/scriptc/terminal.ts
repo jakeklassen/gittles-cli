@@ -179,12 +179,7 @@ export function decodeKeys(chunk: string): Key[] {
 /** Open a URL in the user's browser — `open` the npm package, minus the package. */
 export function openUrl(url: string): boolean {
 	const platform = process.platform;
-	const command =
-		platform === 'darwin'
-			? 'open'
-			: platform === 'win32'
-				? 'explorer'
-				: 'xdg-open';
+	const command = platform === 'darwin' ? 'open' : platform === 'win32' ? 'explorer' : 'xdg-open';
 	const result = spawnSync(command, [url], {stdio: 'ignore'});
 	return result.status === 0;
 }

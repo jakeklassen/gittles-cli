@@ -71,10 +71,7 @@ console.log(dim(`terminal is ${columns} columns wide`));
 
 // 1. A spinner that animates while a real HTTPS request is in flight.
 const spinner = startSpinner('fetching starred repos from GitHub…');
-const bytes = await get(
-	'api.github.com',
-	'/users/jakeklassen/starred?per_page=100',
-);
+const bytes = await get('api.github.com', '/users/jakeklassen/starred?per_page=100');
 spinner.stop(`${green('✔')} fetched ${bytes} bytes`);
 
 // 2. A progress bar driven by a timer.
@@ -83,9 +80,7 @@ await new Promise<void>(resolve => {
 	const total = 40;
 	const timer = setInterval(() => {
 		done += 1;
-		process.stdout.write(
-			`\r${CSI}2K${progressBar(done, total, 30)} ${done}/${total} repos`,
-		);
+		process.stdout.write(`\r${CSI}2K${progressBar(done, total, 30)} ${done}/${total} repos`);
 		if (done >= total) {
 			clearInterval(timer);
 			process.stdout.write('\n');

@@ -97,9 +97,7 @@ export function request(
 function fail(what: string, response: Response): Error {
 	// Collapse the body to one line: these end up on a single status/spinner line.
 	const body = response.body.split('\n').join(' ').split('\r').join('');
-	return new Error(
-		`${what} failed (HTTP ${response.status}): ${body.slice(0, 120)}`,
-	);
+	return new Error(`${what} failed (HTTP ${response.status}): ${body.slice(0, 120)}`);
 }
 
 function toStar(entry: ApiStarred): Star {

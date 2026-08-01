@@ -133,10 +133,7 @@ export async function syncStars(
 	for (let i = 0; i < toUpdate.length; i += batchSize) {
 		const batch = toUpdate.slice(i, i + batchSize);
 		for (const star of batch) {
-			await db
-				.update(starsTable)
-				.set(mapStar(star))
-				.where(eq(starsTable.id, star.repo.id));
+			await db.update(starsTable).set(mapStar(star)).where(eq(starsTable.id, star.repo.id));
 		}
 	}
 

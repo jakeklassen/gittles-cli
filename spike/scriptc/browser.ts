@@ -198,21 +198,12 @@ function searchLine(state: State): string {
 	return `${dim('/')}${state.query}  ${dim('(x to clear)')}`;
 }
 
-function rowLine(
-	state: State,
-	star: Star,
-	isSelected: boolean,
-	width: number,
-): string {
+function rowLine(state: State, star: Star, isSelected: boolean, width: number): string {
 	const isMarked = state.marked.includes(star.id);
 	const nameWidth = Math.max(20, width - 40);
 
 	const name = padEnd(truncate(star.fullName, nameWidth), nameWidth);
-	const nameCell = isMarked
-		? red(strike(name))
-		: isSelected
-			? bold(cyan(name))
-			: name;
+	const nameCell = isMarked ? red(strike(name)) : isSelected ? bold(cyan(name)) : name;
 
 	// padEnd measures printable width, so the SGR codes in the label don't skew it.
 	const languageCell = padEnd(languageLabel(star.language), 12);
@@ -232,10 +223,7 @@ function rowLine(
 }
 
 function footerLines(state: State, width: number): string[] {
-	const position =
-		state.rows.length === 0
-			? '0/0'
-			: `${state.selected + 1}/${state.rows.length}`;
+	const position = state.rows.length === 0 ? '0/0' : `${state.selected + 1}/${state.rows.length}`;
 
 	const pending =
 		state.marked.length === 0
@@ -246,20 +234,12 @@ function footerLines(state: State, width: number): string[] {
 		state.mode === 'search'
 			? dim('enter/esc done · ↑↓ move')
 			: state.updateAvailable === ''
-				? dim(
-						'↑↓/jk move · / search · o open · d mark · c commit · ? help · q quit',
-					)
-				: `${green(`▲ ${state.updateAvailable} available`)} ${dim(
-						'· U to update · S to skip',
-					)}`;
+				? dim('↑↓/jk move · / search · o open · d mark · c commit · ? help · q quit')
+				: `${green(`▲ ${state.updateAvailable} available`)} ${dim('· U to update · S to skip')}`;
 
 	const status = state.status === '' ? '' : `  ${state.status}`;
 
-	return [
-		dim(repeat('─', width)),
-		`${dim(position)}${pending}${status}`,
-		hints,
-	];
+	return [dim(repeat('─', width)), `${dim(position)}${pending}${status}`, hints];
 }
 
 function helpLines(): string[] {
@@ -327,9 +307,7 @@ function render(state: State): string {
 		if (isSelected) {
 			const description = state.rows[i].description;
 			listLines.push(
-				description === ''
-					? ''
-					: dim(`    ${truncate(description, Math.max(10, width - 6))}`),
+				description === '' ? '' : dim(`    ${truncate(description, Math.max(10, width - 6))}`),
 			);
 		}
 	}
@@ -472,9 +450,7 @@ async function commitUnstars(state: State): Promise<void> {
 	const removed = new Set<number>();
 
 	for (const star of targets) {
-		state.status = dim(
-			`unstarring ${star.fullName} (${done + failed + 1}/${targets.length})…`,
-		);
+		state.status = dim(`unstarring ${star.fullName} (${done + failed + 1}/${targets.length})…`);
 		draw(state, false);
 
 		try {
@@ -513,9 +489,7 @@ async function commitUnstars(state: State): Promise<void> {
 	clampScroll(state);
 	state.mode = 'list';
 	state.status =
-		failed === 0
-			? green(`unstarred ${done}`)
-			: yellow(`unstarred ${done}, ${failed} failed`);
+		failed === 0 ? green(`unstarred ${done}`) : yellow(`unstarred ${done}, ${failed} failed`);
 	draw(state, false);
 }
 
@@ -535,9 +509,7 @@ async function runUpdate(state: State): Promise<void> {
 		state.updateAvailable = '';
 		state.status = green(`updated to ${installed} — restart gittles`);
 	} catch (error: unknown) {
-		state.status = red(
-			`update failed: ${error instanceof Error ? error.message : String(error)}`,
-		);
+		state.status = red(`update failed: ${error instanceof Error ? error.message : String(error)}`);
 	}
 
 	state.mode = 'list';
