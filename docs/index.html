@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="color-scheme" content="dark" />
+		<meta
+			name="description"
+			content="Browse your GitHub stars from the terminal. One native binary — no Node, no V8, no JavaScript engine."
+		/>
+		<meta property="og:title" content="gittles" />
+		<meta
+			property="og:description"
+			content="Like skittles for your GitHub stars. A 4.2 MB native binary that starts in 13 ms."
+		/>
+		<meta property="og:type" content="website" />
+		<link
+			rel="icon"
+			href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%23f43f5e'/><g fill='%237d1330'><path d='M9.0 12.4 L10.8 6.9 L13.9 10.4 Z'/><path d='M23.0 12.4 L21.2 6.9 L18.1 10.4 Z'/><ellipse cx='16' cy='15.6' rx='7.1' ry='6.1'/><path d='M11.6 21.6 q1.7 3.1 4.4 3.1 q2.7 0 4.4 -3.1 q-2.2 1.3 -4.4 1.3 q-2.2 0 -4.4 -1.3 Z'/></g><circle cx='13.4' cy='14.9' r='1.25' fill='%23ffe3e9'/><circle cx='18.6' cy='14.9' r='1.25' fill='%23ffe3e9'/></svg>"
+		/>
+		<title>gittles — like skittles for your GitHub stars</title>
+		
+		<style>
+			:root {
+				/* A terminal is a single visual world: this page commits to dark on purpose,
+				   so the tokens are identical under every theme signal. */
+				--bg: #17161a;
+				--panel: #1e1c22;
+				--panel-2: #232128;
+				--line: #2c2933;
+				--text: #d9d6de;
+				--dim: #8b8794;
+				--faint: #605c69;
+				--accent: #f43f5e;
+				--accent-soft: #fb7185;
+				--cyan: #4cc9d9;
+				--gold: #d9a441;
+				--green: #6ee7a8;
+				--mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+					"Liberation Mono", monospace;
+				--serif: "Iowan Old Style", "Charter", Georgia, "Times New Roman", serif;
+				--col: 74ch;
+			}
+		
+			* {
+				box-sizing: border-box;
+			}
+		
+			body {
+				margin: 0;
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--mono);
+				font-size: 15px;
+				line-height: 1.65;
+				-webkit-font-smoothing: antialiased;
+			}
+		
+			.wrap {
+				max-width: var(--col);
+				margin: 0 auto;
+				padding: 0 20px 96px;
+			}
+		
+			a {
+				color: var(--accent);
+				text-decoration: none;
+				border-bottom: 1px solid transparent;
+			}
+		
+			a:hover {
+				border-bottom-color: var(--accent);
+			}
+		
+			a:focus-visible,
+			button:focus-visible {
+				outline: 2px solid var(--accent);
+				outline-offset: 3px;
+				border-radius: 2px;
+			}
+		
+			/* ── top bar ─────────────────────────────────────────────────────────── */
+		
+			.bar {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 16px;
+				flex-wrap: wrap;
+				padding: 22px 0 40px;
+				font-size: 13.5px;
+			}
+		
+			.brand {
+				display: flex;
+				align-items: center;
+				gap: 9px;
+				color: var(--dim);
+			}
+		
+			.brand b {
+				color: var(--accent);
+				font-weight: 600;
+			}
+		
+			.nav {
+				display: flex;
+				gap: 18px;
+				color: var(--dim);
+			}
+		
+			.nav a {
+				color: var(--dim);
+			}
+		
+			.nav a:hover {
+				color: var(--text);
+				border-bottom-color: var(--faint);
+			}
+		
+			/* ── section markers ─────────────────────────────────────────────────── */
+		
+			.cmd {
+				display: flex;
+				gap: 9px;
+				align-items: baseline;
+				margin: 64px 0 20px;
+				font-size: 13.5px;
+				color: var(--dim);
+			}
+		
+			.cmd::before {
+				content: "❯";
+				color: var(--accent);
+			}
+		
+			h1 {
+				margin: 0;
+				font-size: clamp(28px, 7vw, 44px);
+				letter-spacing: -0.02em;
+				text-wrap: balance;
+			}
+		
+			h2 {
+				font-size: 15px;
+				margin: 0 0 10px;
+				font-weight: 600;
+			}
+		
+			.lede {
+				font-family: var(--serif);
+				font-size: 18px;
+				line-height: 1.6;
+				color: #c6c2cd;
+				max-width: 58ch;
+			}
+		
+			.lede em {
+				color: var(--accent);
+				font-style: italic;
+			}
+		
+			/* ── hero banner ─────────────────────────────────────────────────────── */
+		
+			.banner-wrap {
+				overflow-x: auto;
+				padding: 4px 0 2px;
+				scrollbar-width: thin;
+			}
+		
+			.banner {
+				font-family: var(--mono);
+				font-size: clamp(6px, 1.65vw, 12px);
+				line-height: 1.12;
+				margin: 0;
+				white-space: pre;
+				color: var(--cyan);
+			}
+		
+			.banner .o {
+				color: var(--gold);
+			}
+		
+			.cursor {
+				display: inline-block;
+				width: 0.55em;
+				height: 1.05em;
+				translate: 0 0.14em;
+				background: var(--accent);
+				animation: blink 1.15s steps(1) infinite;
+			}
+		
+			@keyframes blink {
+				50% {
+					opacity: 0;
+				}
+			}
+		
+			.tag {
+				margin: 18px 0 0;
+				color: var(--dim);
+				font-size: 14px;
+			}
+		
+			/* ── install ─────────────────────────────────────────────────────────── */
+		
+			.install {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				background: var(--panel);
+				border: 1px solid var(--line);
+				border-radius: 8px;
+				padding: 14px 14px 14px 16px;
+				overflow-x: auto;
+			}
+		
+			.install code {
+				white-space: pre;
+				font-size: 13.5px;
+				color: var(--text);
+			}
+		
+			.install .sh {
+				color: var(--faint);
+			}
+		
+			.copy {
+				margin-left: auto;
+				flex: none;
+				background: transparent;
+				border: 1px solid var(--line);
+				color: var(--dim);
+				font-family: var(--mono);
+				font-size: 12px;
+				padding: 5px 11px;
+				border-radius: 5px;
+				cursor: pointer;
+			}
+		
+			.copy:hover {
+				color: var(--text);
+				border-color: var(--faint);
+			}
+		
+			.copy[data-copied="yes"] {
+				color: var(--green);
+				border-color: color-mix(in oklab, var(--green) 45%, var(--line));
+			}
+		
+			.note {
+				margin: 12px 0 0;
+				color: var(--faint);
+				font-size: 13px;
+			}
+		
+			/* ── facts ───────────────────────────────────────────────────────────── */
+		
+			.facts {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+				gap: 1px;
+				background: var(--line);
+				border: 1px solid var(--line);
+				border-radius: 8px;
+				overflow: hidden;
+			}
+		
+			.fact {
+				background: var(--panel);
+				padding: 16px 18px;
+			}
+		
+			.fact b {
+				display: block;
+				font-size: 21px;
+				font-weight: 600;
+				letter-spacing: -0.01em;
+				font-variant-numeric: tabular-nums;
+			}
+		
+			.fact span {
+				color: var(--faint);
+				font-size: 12.5px;
+			}
+		
+			/* ── faithful TUI panel ──────────────────────────────────────────────── */
+		
+			.tui {
+				background: #131216;
+				border: 1px solid var(--line);
+				border-radius: 8px;
+				overflow: hidden;
+			}
+		
+			.tui-chrome {
+				display: flex;
+				align-items: center;
+				gap: 7px;
+				padding: 10px 13px;
+				border-bottom: 1px solid var(--line);
+				background: var(--panel);
+			}
+		
+			.dot {
+				width: 10px;
+				height: 10px;
+				border-radius: 50%;
+				background: var(--line);
+			}
+		
+			.tui-title {
+				margin-left: 6px;
+				color: var(--faint);
+				font-size: 12px;
+			}
+		
+			.tui-body {
+				margin: 0;
+				padding: 14px 0;
+				overflow-x: auto;
+				font-size: 12.5px;
+				line-height: 1.7;
+				white-space: pre;
+			}
+		
+			.tui-body span {
+				display: block;
+				padding: 0 16px;
+			}
+		
+			.sel {
+				background: #26242c;
+			}
+		
+			.c-star {
+				color: var(--gold);
+			}
+		
+			.c-lang {
+				color: #7cb7ee;
+			}
+		
+			.c-rust {
+				color: #e0985e;
+			}
+		
+			.c-go {
+				color: #6cd0d8;
+			}
+		
+			.c-name {
+				color: #cfcbd6;
+			}
+		
+			.c-sel-name {
+				color: var(--cyan);
+				font-weight: 600;
+			}
+		
+			.c-dim {
+				color: var(--faint);
+			}
+		
+			.c-rose {
+				color: var(--accent);
+			}
+		
+			.c-green {
+				color: var(--green);
+			}
+		
+			.c-mark {
+				color: var(--accent);
+				text-decoration: line-through;
+			}
+		
+			/* ── tables ──────────────────────────────────────────────────────────── */
+		
+			.rows {
+				display: grid;
+				gap: 1px;
+				background: var(--line);
+				border: 1px solid var(--line);
+				border-radius: 8px;
+				overflow: hidden;
+				font-size: 13.5px;
+			}
+		
+			.row {
+				display: grid;
+				grid-template-columns: minmax(140px, 200px) 1fr;
+				gap: 14px;
+				background: var(--panel);
+				padding: 11px 16px;
+			}
+		
+			.row code {
+				color: var(--accent-soft);
+			}
+		
+			.row span {
+				color: var(--dim);
+			}
+		
+			@media (max-width: 560px) {
+				.row {
+					grid-template-columns: 1fr;
+					gap: 2px;
+				}
+			}
+		
+			.keys {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+				gap: 10px 22px;
+				font-size: 13.5px;
+			}
+		
+			.key {
+				display: flex;
+				gap: 10px;
+				align-items: baseline;
+			}
+		
+			.key kbd {
+				font-family: var(--mono);
+				font-size: 12px;
+				color: var(--text);
+				background: var(--panel-2);
+				border: 1px solid var(--line);
+				border-bottom-width: 2px;
+				border-radius: 4px;
+				padding: 1px 7px;
+				flex: none;
+				min-width: 3.4em;
+				text-align: center;
+			}
+		
+			.key span {
+				color: var(--dim);
+			}
+		
+			/* ── update block ────────────────────────────────────────────────────── */
+		
+			.update {
+				background: var(--panel);
+				border: 1px solid var(--line);
+				border-radius: 8px;
+				padding: 16px 18px;
+				font-size: 13.5px;
+				overflow-x: auto;
+			}
+		
+			.update p {
+				margin: 0;
+				white-space: pre;
+			}
+		
+			.spin {
+				color: var(--cyan);
+			}
+		
+			footer {
+				margin-top: 76px;
+				padding-top: 22px;
+				border-top: 1px solid var(--line);
+				color: var(--faint);
+				font-size: 13px;
+				display: flex;
+				gap: 16px;
+				flex-wrap: wrap;
+				justify-content: space-between;
+			}
+		
+			@media (prefers-reduced-motion: reduce) {
+				.cursor {
+					animation: none;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		
+		<div class="wrap">
+			<div class="bar">
+				<div class="brand">
+					<svg width="22" height="22" viewBox="0 0 32 32" role="img" aria-label="gittles logo: a candy with a cat on it">
+						<defs>
+							<radialGradient id="candy" cx="36%" cy="30%" r="78%">
+								<stop offset="0%" stop-color="#ff7a92" />
+								<stop offset="55%" stop-color="#f43f5e" />
+								<stop offset="100%" stop-color="#b32444" />
+							</radialGradient>
+						</defs>
+						<circle cx="16" cy="16" r="14.5" fill="url(#candy)" />
+						<ellipse cx="10.8" cy="9.8" rx="4.6" ry="2.8" fill="#fff" opacity="0.22" transform="rotate(-24 10.8 9.8)" />
+						<g fill="#7d1330" opacity="0.92">
+							<path d="M9.0 12.4 L10.8 6.9 L13.9 10.4 Z" />
+							<path d="M23.0 12.4 L21.2 6.9 L18.1 10.4 Z" />
+							<ellipse cx="16" cy="15.6" rx="7.1" ry="6.1" />
+							<path d="M11.6 21.6 q1.7 3.1 4.4 3.1 q2.7 0 4.4 -3.1 q-2.2 1.3 -4.4 1.3 q-2.2 0 -4.4 -1.3 Z" />
+						</g>
+						<circle cx="13.4" cy="14.9" r="1.25" fill="#ffe3e9" />
+						<circle cx="18.6" cy="14.9" r="1.25" fill="#ffe3e9" />
+					</svg>
+					<span><b>gittles</b>@github:~$</span>
+				</div>
+				<nav class="nav">
+					<a href="#install">install</a>
+					<a href="#usage">usage</a>
+					<a href="https://github.com/jakeklassen/gittles-cli">source</a>
+				</nav>
+			</div>
+		
+			<div class="cmd">whoami</div>
+		
+			<div class="banner-wrap">
+				<pre class="banner" id="banner" aria-label="GITTLES"> ██████╗ ██╗████████╗████████╗██╗     ███████╗███████╗
+		██╔════╝ ██║╚══██╔══╝╚══██╔══╝██║     ██╔════╝██╔════╝
+		██║  ███╗██║   ██║      ██║   ██║     █████╗  ███████╗
+		██║   ██║██║   ██║      ██║   ██║     ██╔══╝  ╚════██║
+		╚██████╔╝██║   ██║      ██║   ███████╗███████╗███████║
+		 ╚═════╝ ╚═╝   ╚═╝      ╚═╝   ╚══════╝╚══════╝╚══════╝</pre>
+			</div>
+		
+			<p class="tag">like skittles for your GitHub stars<span class="cursor"></span></p>
+		
+			<p class="lede">
+				Browse, search and prune your starred repos from the terminal. One native
+				binary — <em>no Node, no V8, no JavaScript engine</em>, and nothing in
+				<code>node_modules</code> at runtime, because there is no
+				<code>node_modules</code>.
+			</p>
+		
+			<div class="cmd" id="install">curl -fsSL gittles/install.sh | sh</div>
+		
+			<div class="install">
+				<code><span class="sh">$</span> curl -fsSL https://raw.githubusercontent.com/jakeklassen/gittles-cli/main/install.sh | sh</code>
+				<button class="copy" id="copy" type="button">copy</button>
+			</div>
+		
+			<p class="note">
+				Installs to <code>~/.local/bin</code>, checks the SHA-256 against the
+				release, and updates itself later without sudo. Linux and macOS, x64 and
+				arm64.
+			</p>
+		
+			<div class="cmd">file $(which gittles)</div>
+		
+			<div class="facts">
+				<div class="fact"><b>4.2<span> MB</span></b><span>one static binary</span></div>
+				<div class="fact"><b>13<span> ms</span></b><span>to first frame</span></div>
+				<div class="fact"><b>0</b><span>runtime deps</span></div>
+				<div class="fact"><b>100<span>%</span></b><span>compiled statically</span></div>
+			</div>
+		
+			<div class="cmd">gittles</div>
+		
+			<div class="tui">
+				<div class="tui-chrome">
+					<i class="dot"></i><i class="dot"></i><i class="dot"></i>
+					<span class="tui-title">gittles — 3,622 stars</span>
+				</div>
+				<pre class="tui-body"><span><b class="c-sel-name">★ GITTLES</b>  <i class="c-dim">like skittles for your GitHub stars  │</i>  <i class="c-green">jakeklassen</i></span><span class="c-dim">3,622 stars · synced 1h ago · 3,622 shown</span><span class="c-dim">──────────────────────────────────────────────────────────────</span><span class="c-dim">/ to search</span><span> </span><span>  <i class="c-name">g9wp/sdl3-deno</i>                  <i class="c-star">★ 18</i>   <i class="c-dim">2mo ago</i>  <i class="c-lang">TypeScript</i></span><span>  <i class="c-mark">✗ vercel-labs/scriptc</i>         <i class="c-star">★ 2,606</i>   <i class="c-dim">26m ago</i>  <i class="c-lang">TypeScript</i></span><span class="sel"><i class="c-rose">❯</i> <i class="c-sel-name">earendil-works/pi-review</i>       <i class="c-star">★ 280</i>   <i class="c-dim">12d ago</i>  <i class="c-lang">TypeScript</i></span><span class="sel">    <i class="c-dim">A review extension for Pi</i></span><span>  <i class="c-name">ccusage/ccusage</i>             <i class="c-star">★ 17,634</i>   <i class="c-dim">11m ago</i>  <i class="c-rust">Rust</i></span><span>  <i class="c-name">schollz/croc</i>                <i class="c-star">★ 39,198</i>    <i class="c-dim">3h ago</i>  <i class="c-go">Go</i></span><span> </span><span class="c-dim">──────────────────────────────────────────────────────────────</span><span><i class="c-dim">1/3622  v0.3.1</i>  <i class="c-rose">1 marked</i> <i class="c-dim">· c to unstar</i></span><span class="c-dim">↑↓/jk move · / search · o open · d mark · c commit · ? help · q quit</span></pre>
+			</div>
+		
+			<p class="note">
+				Marking is safe on its own. <code>d</code> only stages a repo — nothing
+				leaves your account until you press <code>c</code>.
+			</p>
+		
+			<div class="cmd" id="usage">gittles help</div>
+		
+			<div class="rows">
+				<div class="row"><code>gittles</code><span>browse your stars; syncs first if none are stored</span></div>
+				<div class="row"><code>gittles sync [limit]</code><span>pull your stars from GitHub</span></div>
+				<div class="row"><code>gittles login</code><span>sign in with GitHub's device flow</span></div>
+				<div class="row"><code>gittles logout</code><span>forget the stored token</span></div>
+				<div class="row"><code>gittles update</code><span>install the latest release</span></div>
+				<div class="row"><code>gittles version</code><span>print the version</span></div>
+			</div>
+		
+			<div class="cmd">bindkey</div>
+		
+			<div class="keys">
+				<div class="key"><kbd>↑ ↓ j k</kbd><span>move</span></div>
+				<div class="key"><kbd>g G</kbd><span>top / bottom</span></div>
+				<div class="key"><kbd>/</kbd><span>search as you type</span></div>
+				<div class="key"><kbd>o</kbd><span>open in your browser</span></div>
+				<div class="key"><kbd>d</kbd><span>mark for unstarring</span></div>
+				<div class="key"><kbd>U</kbd><span>unmark everything</span></div>
+				<div class="key"><kbd>c</kbd><span>commit — unstar the marked</span></div>
+				<div class="key"><kbd>u</kbd><span>install an offered update</span></div>
+				<div class="key"><kbd>?</kbd><span>help</span></div>
+				<div class="key"><kbd>q</kbd><span>quit</span></div>
+			</div>
+		
+			<div class="cmd">gittles update</div>
+		
+			<div class="update">
+				<p><span class="spin" id="spin">⠹</span> downloading gittles-linux-x64…</p>
+				<p><span class="spin">⠙</span> verifying checksum…</p>
+				<p><span class="c-green">✔</span> updated 0.3.0 → v0.3.1 <span class="c-dim">(checksum verified)</span></p>
+			</div>
+		
+			<p class="note">
+				It checks GitHub once a day, after the first frame is already on screen, and
+				says so in the footer rather than interrupting. The download is verified
+				against the release checksums before anything is replaced — no checksum, no
+				install.
+			</p>
+		
+			<div class="cmd">cat ~/notes/how</div>
+		
+			<p class="lede">
+				It was an Ink + React + SQLite app. None of that stack survived: yoga-layout
+				is WebAssembly, and the compiler's embedded engine has none. So the renderer
+				is hand-written ANSI, storage is JSON, and the GitHub client is one function
+				over <code>node:https</code> — then
+				<a href="https://github.com/vercel-labs/scriptc">scriptc</a> compiles the
+				whole thing to a native executable.
+			</p>
+		
+			<footer>
+				<span>MIT · built with scriptc</span>
+				<span><a href="https://github.com/jakeklassen/gittles-cli">github.com/jakeklassen/gittles-cli</a></span>
+			</footer>
+		</div>
+		
+		<script>
+			// Color the banner the way the CLI does: cfonts paints its block font in two
+			// layers, so the solid face is cyan and the box-drawing outline is gold.
+			const banner = document.getElementById("banner");
+			banner.innerHTML = [...banner.textContent]
+				.map(ch =>
+					ch === "█" || ch === " " || ch === "\n"
+						? ch
+						: `<span class="o">${ch}</span>`,
+				)
+				.join("");
+		
+			const button = document.getElementById("copy");
+			const command =
+				"curl -fsSL https://raw.githubusercontent.com/jakeklassen/gittles-cli/main/install.sh | sh";
+		
+			button.addEventListener("click", async () => {
+				try {
+					await navigator.clipboard.writeText(command);
+					button.textContent = "copied";
+					button.dataset.copied = "yes";
+				} catch {
+					button.textContent = "press ⌘C";
+				}
+		
+				setTimeout(() => {
+					button.textContent = "copy";
+					delete button.dataset.copied;
+				}, 1600);
+			});
+		
+			// The braille spinner, at the cadence the binary uses.
+			const frames = [..."⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"];
+			const spinner = document.getElementById("spin");
+			if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+				let i = 0;
+				setInterval(() => {
+					spinner.textContent = frames[++i % frames.length];
+				}, 80);
+			}
+		</script>
+	</body>
+</html>
