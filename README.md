@@ -45,7 +45,7 @@ $ gittles
     ccusage/ccusage                       ★ 17,634     11m ago  Rust
     schollz/croc                          ★ 39,198      3h ago  Go
 ────────────────────────────────────────────────────────────────────────────
-1/300  2 marked · c to unstar
+1/300  v0.3.0  2 marked · c to unstar
 ↑↓/jk move · / search · o open · d mark · c commit · ? help · q quit
 ```
 
@@ -159,7 +159,7 @@ Two gaps, both about **terminal size** — neither is fatal, but both need worki
 
 ## Self-updating
 
-`gittles update`, or `U` on the footer notice in the browser:
+`gittles update`, or `u` on the footer notice in the browser:
 
 ```console
 ⠹ downloading gittles-linux-x64…
@@ -167,7 +167,8 @@ Two gaps, both about **terminal size** — neither is fatal, but both need worki
 ✔ updated 0.1.0 → v0.2.0
 ```
 
-The check runs **after the first frame**, never before it — a network round-trip would
+The footer shows the running version, and swaps it for the notice when a newer
+release exists. The check runs **after the first frame**, never before it — a network round-trip would
 cost more than the entire rest of the program — and at most once every 24 h, cached in
 `config.json` alongside a `skippedVersion` so a declined release stops nagging.
 

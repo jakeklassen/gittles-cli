@@ -2,6 +2,7 @@ import type {Star} from './github.js';
 import {unstar} from './github.js';
 import {loadConfig, saveStars} from './store.js';
 import {
+	VERSION,
 	checkForUpdate,
 	fetchLatestRelease,
 	installUpdate,
@@ -240,13 +241,18 @@ function footerLines(state: State, width: number): string[] {
 	const hints =
 		state.mode === 'search'
 			? dim('enter/esc done · ↑↓ move')
-			: state.updateAvailable === ''
-				? dim('↑↓/jk move · / search · o open · d mark · c commit · ? help · q quit')
-				: `${green(`▲ ${state.updateAvailable} available`)} ${dim('· U to update · S to skip')}`;
+			: dim('↑↓/jk move · / search · o open · d mark · c commit · ? help · q quit');
+
+	// The version sits where the update notice appears, so one slot answers both
+	// "what am I running" and "what could I be running".
+	const release =
+		state.updateAvailable === ''
+			? dim(`v${VERSION}`)
+			: `${green(`▲ ${state.updateAvailable} available`)} ${dim('· u to update · S to skip')}`;
 
 	const status = state.status === '' ? '' : `  ${state.status}`;
 
-	return [dim(repeat('─', width)), `${dim(position)}${pending}${status}`, hints];
+	return [dim(repeat('─', width)), `${dim(position)}  ${release}${pending}${status}`, hints];
 }
 
 function helpLines(): string[] {
@@ -260,7 +266,8 @@ function helpLines(): string[] {
 		`  ${cyan('x')}            clear the search`,
 		`  ${cyan('o')}            open the selected repo in your browser`,
 		`  ${cyan('d')}            mark / unmark for unstarring`,
-		`  ${cyan('u')}            unmark everything`,
+		`  ${cyan('U')}            unmark everything`,
+		`  ${cyan('u')}            install the update, when one is offered`,
 		`  ${cyan('c')}            commit — unstar everything marked`,
 		`  ${cyan('?')}            this help`,
 		`  ${cyan('q')}            quit`,
@@ -575,7 +582,7 @@ function handleListKey(state: State, key: Key): void {
 		return;
 	}
 
-	if (key.name === 'u') {
+	if (key.name === 'U') {
 		state.marked = [];
 		state.status = dim('cleared marks');
 		return;
@@ -726,7 +733,7 @@ export function browse(stars: Star[]): void {
 				return;
 			}
 
-			if (key.name === 'U' && state.updateAvailable !== '') {
+			if (key.name === 'u' && state.updateAvailable !== '') {
 				runUpdate(state).catch(() => {});
 				return;
 			}
