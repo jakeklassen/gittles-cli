@@ -53,7 +53,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Before the toolchain lands, so the checks only ever see repo files.
+      - name: Check
+        run: pnpm test
+
+      # Extracted outside the checkout: a toolchain unpacked into the workspace gets
+      # picked up by the formatter and the linter.
       - name: Install zig and shim it as clang
+        working-directory: ${{ runner.temp }}
         run: |
           curl -sSL "https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz" | tar -xJ
           echo "${PWD}/zig-x86_64-linux-${ZIG_VERSION}" >> "$GITHUB_PATH"
@@ -61,9 +68,6 @@ jobs:
           printf '#!/bin/sh\nexec zig cc "$@"\n' > "${PWD}/shim/clang"
           chmod +x "${PWD}/shim/clang"
           echo "${PWD}/shim" >> "$GITHUB_PATH"
-
-      - name: Check
-        run: pnpm test
 
       - name: Stamp the version into the binary
         run: |

@@ -9,3 +9,6 @@ gittles
 *.ll
 *.c
 dist/
+
+# toolchains unpacked locally
+zig-*/
