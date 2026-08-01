@@ -96,6 +96,10 @@ jobs:
           # are expected to fail at runtime. Published for testing, not for use.
           build gittles-win32-x64.exe  x86_64-windows-gnu || echo "windows build failed (expected)"
 
+          # The Windows link emits debug symbols beside the exe; they match the
+          # gittles-* glob used for checksums, attestation and upload.
+          rm -f dist/*.pdb
+
           chmod +x dist/*
           ls -la dist
 
